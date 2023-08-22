@@ -57,61 +57,100 @@ class Field {
     };
 
     getPositionCharacter(inputArr) {
-        return myField._field[inputArr[0]][inputArr[1]];
+        return this._field[inputArr[0]][inputArr[1]];
     };
 
     updatePosition(oldPosition, newPosition) {
         this._field[oldPosition[0]][oldPosition[1]] = fieldCharacter;
         this._field[newPosition[0]][newPosition[1]] = pathCharacter;
     };
+
+    static generateField(rowTotal, columnTotal, holePct) {
+        let rows = [];
+
+        for (let i = 0; i < rowTotal; i++) {
+            let columns = [];
+
+            for (let j = 0; j < columnTotal; j++) {
+                columns.push(fieldCharacter);
+            };
+
+            rows.push(columns);
+        };
+
+        let hatPosition = [Math.floor(Math.random() * (rowTotal-1))+1, Math.floor(Math.random() * (columnTotal-1))+1];
+        rows[hatPosition[0]][hatPosition[1]] = hat;
+
+        rows[0][0] = pathCharacter;
+
+        let possibleFieldCount = (rowTotal * columnTotal) - 2;
+
+        let holeCount = Math.floor(possibleFieldCount * Math.min(holePct, 0.33));
+
+        for (let k = 0; k < holeCount; k++) {
+            let holePosition = [0,0];
+
+            while (holePosition[0] === 0 && holePosition[1] === 0) {
+                holePosition = [Math.floor(Math.random() * rowTotal), Math.floor(Math.random() * columnTotal)];
+            };
+            
+            rows[holePosition[0]][holePosition[1]] = hole;
+        };
+
+        return rows;
+    };
 };
 
-const myField = new Field(
+/*const myField = new Field(
     [
         ['*', '░', 'O'],
         ['░', 'O', '░'],
         ['░', '^', '░'],
     ]
-);
+);*/
 
-while (gameFinished === '') {
-    myField.print();
-    let validMove = false;
+const playGame = () => {
+    const gameClass = new Field(Field.generateField(5, 5, 0.2));
 
-    while (validMove === false) {
-
-        let nextMove = prompt("What is your next move (u,d,l,r) to find the hat? (^)");
-        console.log(nextMove);
-
-        if (["u", "d", "l", "r"].includes(nextMove)) {
-            validMove = true;
-        } else {
-            console.log("Please enter a valid move (u,d,l,r)");
+    while (gameFinished === '') {
+        gameClass.print();
+        let validMove = false;
+    
+        while (validMove === false) {
+    
+            let nextMove = prompt("What is your next move (u,d,l,r) to find the hat? (^)");
+            console.log(nextMove);
+    
+            if (["u", "d", "l", "r"].includes(nextMove)) {
+                validMove = true;
+            } else {
+                console.log("Please enter a valid move (u,d,l,r)");
+            };
+    
+            let currentPosition = gameClass.getCurrentPosition();
+    
+            let newPosition = gameClass.getNewPosition(nextMove);
+            let newPositionChar = gameClass.getPositionCharacter(newPosition);
+    
+            if (newPositionChar === "^") {
+                console.log("Congratulations, you have won the game!");
+                gameFinished = "WIN";
+            } else if (newPositionChar === "O") {
+                console.log("You fell into a hole and lose!");
+                gameFinished = "HOLE";
+            } else if (newPosition[0] < 0 ||
+                newPosition[0] > gameClass._field[0].length ||
+                newPosition[1] < 0 ||
+                newPosition[1] > gameClass._field.length) {
+                    console.log("You moved out of bounds, GAME OVER!");
+                    gameFinished = "OOB";
+            };
+    
+            if (gameFinished !== "OOB") {
+                gameClass.updatePosition(currentPosition, newPosition);
+            }
         };
-
-        let currentPosition = myField.getCurrentPosition();
-        let currentRow = currentPosition[0];
-        let currentColumn = currentPosition[1];
-
-        let newPosition = myField.getNewPosition(nextMove);
-        let newPositionChar = myField.getPositionCharacter(newPosition);
-
-        if (newPositionChar === "^") {
-            console.log("Congratulations, you have won the game!");
-            gameFinished = "WIN";
-        } else if (newPositionChar === "O") {
-            console.log("You fell into a hole and lose!");
-            gameFinished = "HOLE";
-        } else if (newPosition[0] < 0 ||
-            newPosition[0] > myField._field[0].length ||
-            newPosition[1] < 0 ||
-            newPosition[1] > myField._field.length) {
-                console.log("You moved out of bounds, GAME OVER!");
-                gameFinished = "OOB";
-        };
-
-        if (gameFinished !== "OOB") {
-            myField.updatePosition(currentPosition, newPosition);
-        }
     };
 };
+
+playGame();
